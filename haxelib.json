@@ -1,0 +1,17 @@
+{
+  "name": "why-auth",
+  "license": "MIT",
+  "tags": [
+    "auth"
+  ],
+  "classPath": "src",
+  "contributors": [
+    "kevinresol"
+  ],
+  "releasenote": "initial release",
+  "version": "0.0.0",
+  "dependencies": {
+    "jsonwebtoken": "",
+    "tink_web": ""
+  }
+}

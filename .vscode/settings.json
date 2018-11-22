@@ -1,0 +1,11 @@
+{
+	"haxe.displayConfigurations": [
+		[
+			"tests.hxml",
+			"-lib",
+			"why-auth",
+			"-lib",
+			"travix",
+		]
+	]
+}
