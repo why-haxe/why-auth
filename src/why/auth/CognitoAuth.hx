@@ -38,13 +38,13 @@ class CognitoAuth<User> implements why.Auth<User> {
 		return verifyToken(idToken).next(claims -> makeUser(cast claims));
 	}
 	
-	function verifyToken(token:String):Promise<Claims> {
+	inline function verifyToken(token:String):Promise<Claims> {
 		return jwk[jwkCacheKey()].next(keys -> {
 			switch Codec.decode(token) {
 				case Success({a: keys[_.kid] => null}):
 					new Error('key not found');
 				case Success({a: keys[_.kid] => key}):
-					var crypto = new NodeCrypto();
+					var crypto = new DefaultCrypto();
 					var verifier = new BasicVerifier(
 						RS256({publicKey: key}),
 						crypto,

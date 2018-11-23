@@ -75,6 +75,16 @@ class CognitoProvider<User> extends BearerProvider<User> {
 	}
 }
 
+class FirebaseProvider<User> extends BearerProvider<User> {
+	public function new(config) {
+		super(token -> new FirebaseAuth({
+			makeUser: config.makeUser,
+			projectId: config.projectId,
+			idToken: token,
+		}).authenticate());
+	}
+}
+
 interface Provider<User> {
 	function authenticate(header:IncomingRequestHeader):Promise<Option<User>>;
 }
