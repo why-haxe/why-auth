@@ -9,7 +9,7 @@ using tink.CoreApi;
 
 class CognitoAuth<User> implements why.Auth<User> {
 	
-	static var jwk:Map<String, Promise<Map<String, String>>>;
+	static var jwk:Map<String, Void->Promise<Map<String, String>>>;
 	
 	var makeUser:CognitoProfile->Promise<Option<User>>;
 	var region:String;
@@ -26,10 +26,11 @@ class CognitoAuth<User> implements why.Auth<User> {
 		
 		var key = jwkCacheKey();
 		if(!jwk.exists(key)) {
-			jwk[key] = Promise.lazy(() -> {
+			jwk[key] = Promise.cache(() -> {
 				tink.http.Fetch.fetch('https://cognito-idp.$region.amazonaws.com/$poolId/.well-known/jwks.json').all()
 					.next(res -> tink.Json.parse((res.body:{keys:Array<{kid:String, n:String, e:String, kty:String, use:String}>})))
-					.next(o -> [for(e in o.keys) e.kid => js.Lib.require('jwk-to-pem')(e)]); // TODO: haxe implementation of jwk-to-pem
+					.next(o -> [for(e in o.keys) e.kid => js.Lib.require('jwk-to-pem')(e)]) // TODO: haxe implementation of jwk-to-pem
+					.next(keys -> new Pair(keys, (cast Future.NEVER:Future<Noise>)));
 			});
 		}
 	}
@@ -39,7 +40,7 @@ class CognitoAuth<User> implements why.Auth<User> {
 	}
 	
 	inline function verifyToken(token:String):Promise<Claims> {
-		return jwk[jwkCacheKey()].next(keys -> {
+		return jwk[jwkCacheKey()]().next(keys -> {
 			switch Codec.decode(token) {
 				case Success({a: keys[_.kid] => null}):
 					new Error('key not found');

@@ -9,10 +9,11 @@ using tink.CoreApi;
 
 class FirebaseAuth<User> implements why.Auth<User> {
 	
-	static var keys:Promise<DynamicAccess<String>> = 
-		Promise.lazy(() -> {
+	static var keys:Void->Promise<DynamicAccess<String>> = 
+		Promise.cache(() -> {
 			tink.http.Fetch.fetch('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com').all()
-				.next(res -> tink.Json.parse((res.body:DynamicAccess<String>)));
+				.next(res -> tink.Json.parse((res.body:DynamicAccess<String>)))
+				.next(keys -> new Pair(keys, (cast Future.NEVER:Future<Noise>)));
 		});
 	
 	var makeUser:String->Promise<Option<User>>;
@@ -30,7 +31,7 @@ class FirebaseAuth<User> implements why.Auth<User> {
 	}
 	
 	inline function verifyToken(token:String):Promise<Claims> {
-		return keys.next(keys -> {
+		return keys().next(keys -> {
 			switch Codec.decode(token) {
 				case Success({a: keys[_.kid] => null}):
 					new Error('key not found');
