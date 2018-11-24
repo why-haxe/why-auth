@@ -1,4 +1,8 @@
-package why.auth;
+package why.auth.plugins.tink.web;
+
+#if !tink_web
+	#error 'Plugin tink.web.AuthSession requires the tink_web library'
+#end
 
 import tink.http.Request;
 import tink.Anon.merge;
@@ -6,7 +10,7 @@ import why.auth.CognitoAuth;
 
 using tink.CoreApi;
 
-class TinkWebAuth<User> implements why.Auth<User> {
+class AuthSession<User> {
 	
 	var header:IncomingRequestHeader;
 	var providers:Array<Provider<User>>;
@@ -16,7 +20,7 @@ class TinkWebAuth<User> implements why.Auth<User> {
 		this.providers = providers;
 	}
 	
-	public function authenticate():Promise<Option<User>> {
+	public function getUser():Promise<Option<User>> {
 		return Promise.iterate(
 			[for(provider in providers) Promise.lazy(provider.authenticate.bind(header))],
 			function(result) return result.map(Some),
