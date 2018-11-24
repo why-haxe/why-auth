@@ -12,6 +12,7 @@
   "version": "0.0.0",
   "dependencies": {
     "jsonwebtoken": "",
-    "tink_web": ""
+    "tink_web": "",
+    "tink_state": ""
   }
 }

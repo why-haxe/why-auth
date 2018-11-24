@@ -1,0 +1,3 @@
+-D aws-amplify=0.0.0
+# @install: lix --silent download "gh://github.com/kevinresol/aws-amplify#1d2d6e7a2e516d732d48305edb4c74fae41f9255" into aws-amplify/0.0.0/github/1d2d6e7a2e516d732d48305edb4c74fae41f9255
+-cp ${HAXE_LIBCACHE}/aws-amplify/0.0.0/github/1d2d6e7a2e516d732d48305edb4c74fae41f9255/src
