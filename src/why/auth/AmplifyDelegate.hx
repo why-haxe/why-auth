@@ -10,19 +10,30 @@ import tink.state.*;
 
 using tink.CoreApi;
 
+typedef SignInInfo = {
+	username:String,
+	password:String,
+}
+
 /**
  * Setup:
  * Call `aws.amplify.Amplify.configure` before using this class
  * You can also use the macro helper to parse the downloaded `aws-exports.js` file
  * e.g. `Amplify.configure(Macro.parseConfig('aws-exports.js')`
  */
-class AmplifyDelegate implements Delegate<UserInfo> {
+class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 	
-	public static var INSTANCE(get, null):AmplifyDelegate;
-	static function get_INSTANCE() {
-		if(INSTANCE == null) INSTANCE = new AmplifyDelegate();
-		return INSTANCE;
+	public static var instance(get, null):AmplifyDelegate;
+	static function get_instance() {
+		if(instance == null) instance = new AmplifyDelegate();
+		return instance;
 	}
+	
+	// shorthand
+	public static var inst(get, never):AmplifyDelegate;
+	static inline function get_inst() return instance;
+	
+	
 	public var status(default, null):Observable<Status<UserInfo>>;
 	
 	function new() {
@@ -46,6 +57,11 @@ class AmplifyDelegate implements Delegate<UserInfo> {
 		});
 		
 		update();
+	}
+	
+	public function signIn(credentials:SignInInfo):Promise<UserInfo> {
+		return Promise.ofJsPromise(Auth.signIn(credentials.username, credentials.password))
+			.next(_ -> Promise.ofJsPromise(Auth.currentUserInfo()));
 	}
 	
 	public function signOut():Promise<Noise> {

@@ -17,7 +17,7 @@ class DelegatedClient implements ClientObject {
 	var getToken:Void->Promise<Option<String>>;
 	var scheme:String;
 	
-	public function new<P>(client, delegate:Delegate<P>, scheme = 'Bearer') {
+	public function new<C, P>(client, delegate:Delegate<C, P>, scheme = 'Bearer') {
 		this.client = client;
 		this.scheme = scheme;
 		this.getToken = delegate.getToken;
