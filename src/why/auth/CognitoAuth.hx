@@ -9,7 +9,7 @@ using tink.CoreApi;
 
 class CognitoAuth<User> implements why.Auth<User> {
 	
-	static var jwk:Map<String, Void->Promise<Map<String, String>>>;
+	static var jwk:Map<String, Void->Promise<Map<String, String>>> = new Map();
 	
 	var makeUser:CognitoProfile->Promise<Option<User>>;
 	var region:String;
