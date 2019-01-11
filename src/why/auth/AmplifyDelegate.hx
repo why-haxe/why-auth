@@ -43,18 +43,21 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 		function update()
 			Promise.ofJsPromise(Auth.currentUserInfo())
 				.handle(function(o) switch o {
-					case Success(null): trace(null); state.set(SignedOut);
-					case Success(user): trace(user); state.set(SignedIn(user));
-					case Failure(e): trace(e); state.set(Errored(e));
+					case Success(null): state.set(SignedOut);
+					case Success(user): state.set(SignedIn(user));
+					case Failure(e): state.set(Errored(e));
 				});
 			
 		Hub.listen('auth', {
 			onHubCapsule:
-				function(capsule) switch capsule.payload.event {
-					case 'signIn' | 'configured': update();
-					case 'signOut': state.set(SignedOut);
+				function(capsule) {
+					switch capsule.payload.event {
+						case 'signIn' | 'configured': update();
+						case 'signOut': state.set(SignedOut);
+					}
 				}
 		});
+		update();
 	}
 	
 	public function signIn(credentials:SignInInfo):Promise<UserInfo> {
