@@ -62,6 +62,12 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 	
 	public function signIn(credentials:SignInInfo):Promise<UserInfo> {
 		return Promise.ofJsPromise(Auth.signIn(credentials.username, credentials.password))
+			.next(user -> {
+				if(user.challengeName == 'NEW_PASSWORD_REQUIRED')
+					Promise.ofJsPromise(Auth.completeNewPassword(user, credentials.password)).noise();
+				else
+					Promise.NOISE;
+			})
 			.next(_ -> Promise.ofJsPromise(Auth.currentUserInfo()));
 	}
 	
