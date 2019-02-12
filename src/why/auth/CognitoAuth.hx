@@ -65,4 +65,8 @@ class CognitoAuth<User> implements why.Auth<User> {
 		return '$region:$poolId';
 }
 
-typedef CognitoProfile = DynamicAccess<Dynamic>;
+typedef CognitoProfile = {
+	> Claims,
+	?email:String,
+	// 'cognito:username'
+}
