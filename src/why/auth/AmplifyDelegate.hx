@@ -4,6 +4,7 @@ package why.auth;
 	#error 'The class AmplifyDelegate requires the aws-amplify library'
 #end
 
+import aws.amplify.Amplify;
 import aws.amplify.Auth;
 import aws.amplify.Hub;
 import tink.state.*;
@@ -17,9 +18,7 @@ typedef SignInInfo = {
 
 /**
  * Setup:
- * Call `aws.amplify.Amplify.configure` before using this class
- * You can also use the macro helper to parse the downloaded `aws-exports.js` file
- * e.g. `Amplify.configure(Macro.parseConfig('aws-exports.js')`
+ * Call `AmplifyDelegate.configure` before accessing `AmplifyDelegate.instance`
  */
 class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 	
@@ -35,6 +34,18 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 	
 	
 	public var status(default, null):Observable<Status<UserInfo>>;
+	
+	public static function configure(config:{region:String, userPoolId:String, appClientId:String, ?identityPoolId:String}) {
+		Amplify.configure({
+			Auth: {
+				mandatorySignIn: true,
+				region: config.region,
+				userPoolId: config.userPoolId,
+				userPoolWebClientId: config.appClientId,
+				identityPoolId: config.identityPoolId,
+			}
+		});
+	}
 	
 	function new() {
 		var state = new State<Status<UserInfo>>(Initializing);
