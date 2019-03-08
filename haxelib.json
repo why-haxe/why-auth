@@ -1,18 +1,18 @@
 {
-  "name": "why-auth",
-  "license": "MIT",
-  "tags": [
-    "auth"
-  ],
-  "classPath": "src",
-  "contributors": [
-    "kevinresol"
-  ],
-  "releasenote": "initial release",
-  "version": "0.0.0",
-  "dependencies": {
-    "jsonwebtoken": "",
-    "tink_web": "",
-    "tink_state": ""
-  }
+	"name": "why-auth",
+	"classPath": "src",
+	"dependencies": {
+		"jsonwebtoken": "",
+		"tink_web": "",
+		"tink_state": ""
+	},
+	"contributors": [
+		"kevinresol"
+	],
+	"version": "0.1.0",
+	"releasenote": "Initial release",
+	"tags": [
+		"auth"
+	],
+	"license": "MIT"
 }
