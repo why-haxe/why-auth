@@ -1,6 +1,7 @@
 {
 	"name": "why-auth",
 	"classPath": "src",
+	"description": "Abstraction of various authentication mechanism",
 	"dependencies": {
 		"jsonwebtoken": "",
 		"tink_state": ""
