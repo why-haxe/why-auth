@@ -19,6 +19,13 @@ interface Delegate<Credentials, Profile> {
 	function signIn(credentials:Credentials):Promise<Profile>;
 	function signOut():Promise<Noise>;
 }
+
+enum Status<Profile> {
+	Initializing;
+	SignedOut;
+	SignedIn(profile:Profile);
+	Errored(e:Error);
+}
 ```
 
 
