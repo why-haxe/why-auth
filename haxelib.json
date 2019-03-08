@@ -3,7 +3,6 @@
 	"classPath": "src",
 	"dependencies": {
 		"jsonwebtoken": "",
-		"tink_web": "",
 		"tink_state": ""
 	},
 	"contributors": [
