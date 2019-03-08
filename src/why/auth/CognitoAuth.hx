@@ -43,7 +43,7 @@ class CognitoAuth<User> implements why.Auth<User> {
 		return jwk[jwkCacheKey()]().next(keys -> {
 			switch Codec.decode(token) {
 				case Success({a: keys[_.kid] => null}):
-					new Error('key not found');
+					new Error('[CognitoAuth] key not found');
 				case Success({a: keys[_.kid] => key}):
 					var crypto = new DefaultCrypto();
 					var verifier = new BasicVerifier(
