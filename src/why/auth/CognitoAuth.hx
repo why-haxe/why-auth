@@ -65,8 +65,14 @@ class CognitoAuth<User> implements why.Auth<User> {
 		return '$region:$poolId';
 }
 
-typedef CognitoProfile = {
+@:forward
+abstract CognitoProfile(CognitoProfileObj) from CognitoProfileObj to CognitoProfileObj {
+	@:arrayAccess
+	public inline function resolve(key:String):String return Reflect.field(this, key);
+}
+
+typedef CognitoProfileObj = {
 	> Claims,
 	?email:String,
-	// 'cognito:username'
+	?phone_number:String,
 }
