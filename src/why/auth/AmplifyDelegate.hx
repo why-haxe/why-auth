@@ -22,11 +22,7 @@ typedef SignInInfo = {
  */
 class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 	
-	public static var instance(get, null):AmplifyDelegate;
-	static function get_instance() {
-		if(instance == null) instance = new AmplifyDelegate();
-		return instance;
-	}
+	public static var instance(default, null):AmplifyDelegate = new AmplifyDelegate();
 	
 	// shorthand
 	public static var inst(get, never):AmplifyDelegate;
@@ -54,7 +50,7 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 		function update(init = false)
 			Promise.ofJsPromise(Auth.currentUserInfo())
 				.handle(function(o) switch o {
-					case Success(null): if(!init) state.set(SignedOut);
+					case Success(null): state.set(SignedOut);
 					case Success(user): state.set(SignedIn(user));
 					case Failure(e): state.set(Errored(e));
 				});
@@ -68,8 +64,6 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 					}
 				}
 		});
-		
-		update(true);
 	}
 	
 	public function signIn(credentials:SignInInfo):Promise<UserInfo> {
