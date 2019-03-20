@@ -51,10 +51,10 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 		var state = new State<Status<UserInfo>>(Initializing);
 		status = state.observe();
 		
-		function update()
+		function update(init = false)
 			Promise.ofJsPromise(Auth.currentUserInfo())
 				.handle(function(o) switch o {
-					case Success(null): state.set(SignedOut);
+					case Success(null): if(!init) state.set(SignedOut);
 					case Success(user): state.set(SignedIn(user));
 					case Failure(e): state.set(Errored(e));
 				});
@@ -68,7 +68,8 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 					}
 				}
 		});
-		update();
+		
+		update(true);
 	}
 	
 	public function signIn(credentials:SignInInfo):Promise<UserInfo> {
