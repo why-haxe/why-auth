@@ -66,6 +66,7 @@ class BearerProvider<User> implements ProviderObject<User> {
 		}
 	}
 }
+
 class CookieProvider<User> implements ProviderObject<User> {
 	
 	var name:String;
@@ -80,6 +81,24 @@ class CookieProvider<User> implements ProviderObject<User> {
 		return switch header.getCookie(name) {
 			case null: None;
 			case cookie: make(cookie);
+		}
+	}
+}
+
+class QueryProvider<User> implements ProviderObject<User> {
+	
+	var name:String;
+	var make:String->Promise<Option<User>>;
+	
+	public function new(name, make) {
+		this.name = name;
+		this.make = make;
+	}
+	
+	public function authenticate(header:IncomingRequestHeader):Promise<Option<User>> {
+		return switch header.url.query.toMap().get(name) {
+			case null: None;
+			case param: make(param);
 		}
 	}
 }
