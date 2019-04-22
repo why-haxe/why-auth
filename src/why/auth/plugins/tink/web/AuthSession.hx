@@ -29,7 +29,7 @@ class AuthSession<User> {
 	}
 }
 
-class DirectProvider<User> implements Provider<User> {
+class DirectProvider<User> implements ProviderObject<User> {
 	
 	var make:String->Promise<Option<User>>;
 	var schema:String;
@@ -49,7 +49,7 @@ class DirectProvider<User> implements Provider<User> {
 	}
 }
 
-class BearerProvider<User> implements Provider<User> {
+class BearerProvider<User> implements ProviderObject<User> {
 	
 	var make:String->Promise<Option<User>>;
 	
@@ -63,6 +63,23 @@ class BearerProvider<User> implements Provider<User> {
 				make(token);
 			case _:
 				None;
+		}
+	}
+}
+class CookieProvider<User> implements ProviderObject<User> {
+	
+	var name:String;
+	var make:String->Promise<Option<User>>;
+	
+	public function new(name, make) {
+		this.name = name;
+		this.make = make;
+	}
+	
+	public function authenticate(header:IncomingRequestHeader):Promise<Option<User>> {
+		return switch header.getCookie(name) {
+			case null: None;
+			case cookie: make(cookie);
 		}
 	}
 }
@@ -89,6 +106,19 @@ class FirebaseProvider<User> extends BearerProvider<User> {
 	}
 }
 
-interface Provider<User> {
+class SimpleProvider<User> implements ProviderObject<User> {
+	var f:IncomingRequestHeader->Promise<Option<User>>;
+	public function new(f)
+		this.f = f;
+	public function authenticate(header:IncomingRequestHeader):Promise<Option<User>>
+		return f(header);
+}
+
+@:forward
+abstract Provider<User>(ProviderObject<User>) from ProviderObject<User> to ProviderObject<User> {
+	@:from public static inline function fromFunction<User>(f:IncomingRequestHeader->Promise<Option<User>>):Provider<User>
+		return new SimpleProvider(f);
+}
+interface ProviderObject<User> {
 	function authenticate(header:IncomingRequestHeader):Promise<Option<User>>;
 }
