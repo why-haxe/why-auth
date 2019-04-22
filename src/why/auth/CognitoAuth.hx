@@ -7,6 +7,9 @@ import haxe.DynamicAccess;
 
 using tink.CoreApi;
 
+/**
+ * Cognito User Pool
+ */
 class CognitoAuth<User> implements why.Auth<User> {
 	
 	static var jwk:Map<String, Void->Promise<Map<String, String>>> = new Map();
