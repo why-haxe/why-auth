@@ -29,29 +29,9 @@ class AuthSession<User> {
 	}
 }
 
-class DirectProvider<User> implements ProviderObject<User> {
+class AuthHeaderProvider<User> implements ProviderObject<User> {
 	
-	var make:String->Promise<Option<User>>;
-	var schema:String;
-	
-	public function new(make, schema = 'Direct') {
-		this.make = make;
-		this.schema = schema;
-	}
-	
-	public function authenticate(header:IncomingRequestHeader):Promise<Option<User>> {
-		return switch header.getAuth() {
-			case Success(Others(schema, param)) if(schema == this.schema):
-				make(param);
-			case _:
-				None;
-		}
-	}
-}
-
-class BearerProvider<User> implements ProviderObject<User> {
-	
-	var make:String->Promise<Option<User>>;
+	var make:Authorization->Promise<Option<User>>;
 	
 	public function new(make) {
 		this.make = make;
@@ -59,11 +39,18 @@ class BearerProvider<User> implements ProviderObject<User> {
 	
 	public function authenticate(header:IncomingRequestHeader):Promise<Option<User>> {
 		return switch header.getAuth() {
-			case Success(Bearer(token)):
-				make(token);
-			case _:
-				None;
+			case Success(auth): make(auth);
+			case _: None;
 		}
+	}
+}
+
+class BearerProvider<User> extends AuthHeaderProvider<User> {
+	public function new(make:String->Promise<Option<User>>) {
+		super(function(auth) return switch auth {
+			case Bearer(v): make(v);
+			case _: None;
+		});
 	}
 }
 
