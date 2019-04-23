@@ -22,7 +22,7 @@ class AuthSession<User> {
 	
 	public function getUser():Promise<Option<User>> {
 		return Promise.iterate(
-			[for(provider in providers) Promise.lazy(provider.authenticate.bind(header))],
+			[for(provider in providers) Promise.lazy(function() return provider.authenticate(header))], // https://github.com/HaxeFoundation/haxe/issues/8200
 			function(result) return result.map(Some),
 			None
 		);
