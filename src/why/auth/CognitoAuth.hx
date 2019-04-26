@@ -15,10 +15,10 @@ class CognitoAuth<User> implements why.Auth<User> {
 	static var jwk:Map<String, Void->Promise<Map<String, String>>> = new Map();
 	
 	var makeUser:CognitoProfile->Promise<Option<User>>;
-	var region:String;
-	var poolId:String;
-	var clientId:String;
-	var idToken:String;
+	public var region(default, null):String;
+	public var poolId(default, null):String;
+	public var clientId(default, null):String;
+	public var idToken(default, null):String;
 	
 	public function new(config) {
 		this.makeUser = config.makeUser;
@@ -26,25 +26,26 @@ class CognitoAuth<User> implements why.Auth<User> {
 		this.poolId = config.poolId;
 		this.clientId = config.clientId;
 		this.idToken = config.idToken;
+	}
+	
+	public function authenticate():Promise<Option<User>> {
+		return verifyToken(this).next(claims -> makeUser(cast claims));
+	}
+	
+	public static function verifyToken(o:VerifyInput):Promise<Claims> {
 		
-		var key = jwkCacheKey();
-		if(!jwk.exists(key)) {
-			jwk[key] = Promise.cache(() -> {
-				tink.http.Fetch.fetch('https://cognito-idp.$region.amazonaws.com/$poolId/.well-known/jwks.json').all()
+		var cache = '${o.region}:${o.poolId}';
+		if(!jwk.exists(cache)) {
+			jwk[cache] = Promise.cache(() -> {
+				tink.http.Fetch.fetch('https://cognito-idp.${o.region}.amazonaws.com/${o.poolId}/.well-known/jwks.json').all()
 					.next(res -> tink.Json.parse((res.body:{keys:Array<{kid:String, n:String, e:String, kty:String, use:String}>})))
 					.next(o -> [for(e in o.keys) e.kid => js.Lib.require('jwk-to-pem')(e)]) // TODO: haxe implementation of jwk-to-pem
 					.next(keys -> new Pair(keys, (cast Future.NEVER:Future<Noise>)));
 			});
 		}
-	}
-	
-	public function authenticate():Promise<Option<User>> {
-		return verifyToken(idToken).next(claims -> makeUser(cast claims));
-	}
-	
-	inline function verifyToken(token:String):Promise<Claims> {
-		return jwk[jwkCacheKey()]().next(keys -> {
-			switch Codec.decode(token) {
+		
+		return jwk[cache]().next(keys -> {
+			switch Codec.decode(o.idToken) {
 				case Success({a: keys[_.kid] => null}):
 					new Error('[CognitoAuth] key not found');
 				case Success({a: keys[_.kid] => key}):
@@ -53,19 +54,16 @@ class CognitoAuth<User> implements why.Auth<User> {
 						RS256({publicKey: key}),
 						crypto,
 						{
-							iss: 'https://cognito-idp.$region.amazonaws.com/$poolId',
-							aud: clientId,
+							iss: 'https://cognito-idp.${o.region}.amazonaws.com/${o.poolId}',
+							aud: o.clientId,
 						}
 					);
-					verifier.verify(token);
+					verifier.verify(o.idToken);
 				case Failure(e):
 					e;
 			}
 		});
 	}
-	
-	inline function jwkCacheKey()
-		return '$region:$poolId';
 }
 
 @:forward
@@ -78,4 +76,11 @@ typedef CognitoProfileObj = {
 	> Claims,
 	?email:String,
 	?phone_number:String,
+}
+
+typedef VerifyInput = {
+	var region(default, null):String;
+	var poolId(default, null):String;
+	var clientId(default, null):String;
+	var idToken(default, null):String;
 }
