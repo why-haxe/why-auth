@@ -12,13 +12,10 @@ class FirebaseDelegate implements Delegate<Credentials, User> {
 	
 	public function new(auth) {
 		var state = new State<Status<User>>(Initializing);
-		auth.onAuthStateChanged(function(user) {
-			if(user != null) {
-				state.set(SignedIn(user));
-			} else {
-				state.set(SignedOut);
-			}
-		});
+		auth.onAuthStateChanged(
+			function(user) state.set(user == null ? SignedOut : SignedIn(user)),
+			function(e) state.set(Errored(Error.ofJsError(e)))
+		);
 		status = state.observe();
 	}
 	
