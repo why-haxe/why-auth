@@ -1,0 +1,3 @@
+-D hxjs-firebase=0.0.0
+# @install: lix --silent download "gh://github.com/kevinresol/hxjs-firebase#c55e3b855c9127a37201f8c1a72d95165d273b25" into hxjs-firebase/0.0.0/github/c55e3b855c9127a37201f8c1a72d95165d273b25
+-cp ${HAXE_LIBCACHE}/hxjs-firebase/0.0.0/github/c55e3b855c9127a37201f8c1a72d95165d273b25/src

@@ -17,10 +17,13 @@ class DelegatedClient implements ClientObject {
 	var getToken:Void->Promise<Option<String>>;
 	var scheme:String;
 	
-	public function new<C, P>(client, delegate:Delegate<C, P>, scheme = 'Bearer') {
+	public function new<S, C, P>(client, delegate:Delegate<S, C, P>, scheme = 'Bearer') {
 		this.client = client;
 		this.scheme = scheme;
-		this.getToken = delegate.getToken;
+		this.getToken = () -> switch delegate.status.value {
+			case SignedIn(user): user.getToken().next(Some);
+			case _: Promise.resolve(None);
+		}
 	}
 	
 	public function request(req:OutgoingRequest):Promise<IncomingResponse> {

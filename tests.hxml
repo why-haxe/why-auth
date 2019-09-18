@@ -3,3 +3,4 @@
 -dce full
 
 -lib aws-amplify
+-lib hxjs-firebase

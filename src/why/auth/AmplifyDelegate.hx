@@ -4,6 +4,7 @@ package why.auth;
 	#error 'The class AmplifyDelegate requires the aws-amplify library'
 #end
 
+import why.Delegate;
 import aws.amplify.Amplify;
 import aws.amplify.Auth;
 import aws.amplify.Hub;
@@ -20,7 +21,7 @@ typedef SignInInfo = {
  * Setup:
  * Call `AmplifyDelegate.configure` before accessing `AmplifyDelegate.instance`
  */
-class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
+class AmplifyDelegate implements Delegate<SignUpInfo, SignInInfo, UserAttributes, UserAttributes> {
 	
 	public static var instance(default, null):AmplifyDelegate = new AmplifyDelegate();
 	
@@ -29,7 +30,7 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 	static inline function get_inst() return instance;
 	
 	
-	public var status(default, null):Observable<Status<UserInfo>>;
+	public var status(default, null):Observable<Status<User<UserAttributes, UserAttributes>>>;
 	
 	public static function configure(config:{region:String, userPoolId:String, appClientId:String, ?identityPoolId:String}) {
 		Amplify.configure({
@@ -44,15 +45,22 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 	}
 	
 	function new() {
-		var state = new State<Status<UserInfo>>(Initializing);
+		var state = new State<Status<User<UserAttributes, UserAttributes>>>(Initializing);
 		status = state.observe();
 		
 		function update(init = false)
-			Promise.ofJsPromise(Auth.currentUserInfo())
+			Promise.ofJsPromise(Auth.currentUserPoolUser())
 				.handle(function(o) switch o {
-					case Success(null): state.set(SignedOut);
-					case Success(user): state.set(SignedIn(user));
-					case Failure(e): state.set(Errored(e));
+					case Success(null):
+						state.set(SignedOut);
+					case Success(user):
+						Promise.ofJsPromise(Auth.userAttributes(user))
+							.handle(function(o) state.set(switch o {
+								case Success(attrs): SignedIn(new AmplifyUser(user, [for(entry in attrs) entry.Name => entry.Value]));
+								case Failure(e): Errored(e);
+							}));
+					case Failure(e):
+						state.set(Errored(e));
 				});
 			
 		Hub.listen('auth', {
@@ -66,26 +74,63 @@ class AmplifyDelegate implements Delegate<SignInInfo, UserInfo> {
 		});
 	}
 	
-	public function signIn(credentials:SignInInfo):Promise<UserInfo> {
+	public function signUp(info:SignUpInfo):Promise<Noise> {
+		return Promise.ofJsPromise(Auth.signUp(info)).noise();
+	}
+	
+	public function signIn(credentials:SignInInfo):Promise<Noise> {
 		return Promise.ofJsPromise(Auth.signIn(credentials.username, credentials.password))
 			.next(user -> {
 				if((cast user).challengeName == 'NEW_PASSWORD_REQUIRED')
 					Promise.ofJsPromise(Auth.completeNewPassword(user, credentials.password)).noise();
 				else
 					Promise.NOISE;
-			})
-			.next(_ -> Promise.ofJsPromise(Auth.currentUserInfo()));
+			});
 	}
 	
 	public function signOut():Promise<Noise> {
 		return Promise.ofJsPromise(Auth.signOut());
 	}
 	
-	public function getToken():Promise<Option<String>> {
-		return Promise.ofJsPromise(Auth.currentSession())
-			.next(s -> switch s.idToken.jwtToken {
-				case null: None;
-				case v: Some(v);
-			});
+	public function forgetPassword(id:String):Promise<Noise> {
+		return Promise.ofJsPromise(Auth.forgotPassword(id)).noise();
 	}
+	
+	public function resetPassword(id:String, code:String, password:String):Promise<Noise> {
+		return Promise.ofJsPromise(Auth.forgotPasswordSubmit(id, code, password)).noise();
+	}
+	
+	public function confirmSignUp(id:String, code:String):Promise<Noise> {
+		return Promise.ofJsPromise(Auth.confirmSignUp(id, code)).noise();
+	}
+	
+}
+
+class AmplifyUser implements User<UserAttributes, UserAttributes> {
+	public var profile(default, null):Observable<UserAttributes>;
+	var user:CognitoUser;
+	
+	public function new(user, attrs) {
+		this.user = user;
+		profile = new State(attrs); // TODO: update when needed
+	}
+	
+	public function getToken():Promise<String> {
+		return Promise.ofJsPromise(Auth.userSession(user))
+			.next(session -> session.idToken.jwtToken);
+	}
+	
+	public function updateProfile(patch:UserAttributes):Promise<Noise> {
+		return Promise.ofJsPromise(user.updateAttributes([for(key in patch.keys()) {Name: key, Value: patch[key]}])).noise();
+	}
+	
+	public function changePassword(oldPassword:String, newPassword:String):Promise<Noise> {
+		return Promise.ofJsPromise(Auth.changePassword(user, oldPassword, newPassword)).noise();
+	}
+}
+
+@:forward(keys)
+abstract UserAttributes(Map<String, String>) from Map<String, String> to Map<String, String> {
+	@:resolve @:arrayAccess
+	public inline function get(key:String):String return this.get(key);
 }
