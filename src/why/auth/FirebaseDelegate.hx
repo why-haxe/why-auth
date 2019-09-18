@@ -38,7 +38,8 @@ class FirebaseDelegate implements Delegate<Credentials, Credentials, FirebasePro
 	public function signUp(credentials:Credentials):Promise<Noise> {
 		return switch credentials {
 			case Email(email, password):
-				Promise.ofJsPromise(auth.createUserWithEmailAndPassword(email, password));
+				Promise.ofJsPromise(auth.createUserWithEmailAndPassword(email, password))
+					.next(cred -> cred.user.sendEmailVerification());
 		}
 	}
 	public function signIn(credentials:Credentials):Promise<Noise> {
