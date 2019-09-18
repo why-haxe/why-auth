@@ -26,4 +26,11 @@ class StatusTools {
 			case _: Promise.NEVER;
 		}
 	}
+	
+	public static function toOption<P>(status:Status<P>):Option<P> {
+		return switch status {
+			case SignedIn(profile): Some(profile);
+			case _: None;
+		}
+	}
 }
