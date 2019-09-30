@@ -7,25 +7,11 @@ import why.Delegate;
 using tink.CoreApi;
 
 class FirebaseDelegate implements Delegate<Credentials, Credentials, FirebaseProfile, FirebaseProfilePatch> {
-	
-	public static var instance(default, null):FirebaseDelegate =
-		new FirebaseDelegate(
-			#if firebase_global
-				js.Syntax.code('firebase.auth()')
-			#else
-				js.Lib.require('firebase').auth()
-			#end
-		);
-	
-	// shorthand
-	public static var inst(get, never):FirebaseDelegate;
-	static inline function get_inst():FirebaseDelegate return instance;
-	
 	public var status(default, null):Observable<Status<User<FirebaseProfile, FirebaseProfilePatch>>>;
 	
 	var auth:Auth;
 	
-	function new(auth) {
+	public function new(auth) {
 		this.auth = auth;
 		var state = new State<Status<User<FirebaseProfile, FirebaseProfilePatch>>>(Initializing);
 		auth.onAuthStateChanged(
