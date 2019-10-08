@@ -7,6 +7,7 @@ package why.auth.plugins.tink.web;
 import tink.http.Request;
 import tink.Anon.merge;
 import why.auth.CognitoAuth;
+import why.auth.FirebaseAuth;
 
 using tink.CoreApi;
 
@@ -90,25 +91,79 @@ class QueryProvider<User> implements ProviderObject<User> {
 	}
 }
 
-class CognitoProvider<User> extends BearerProvider<User> {
-	public function new(config) {
+class TokenProvider<User> implements ProviderObject<User> {
+	
+	var makeUser:String->Promise<Option<User>>;
+	
+	public function new(makeUser, ?extractToken) {
+		this.makeUser = makeUser;
+		if(extractToken != null) this.extractToken = extractToken;
+	}
+	
+	dynamic function extractToken(header:IncomingRequestHeader):Outcome<Option<String>, Error> {
+		return switch header.getAuth() {
+			case Success(Bearer(token)): Success(Some(token));
+			case _: Success(None);
+		}
+	}
+	
+	public function authenticate(header:IncomingRequestHeader):Promise<Option<User>> {
+		return switch extractToken(header) {
+			case Success(Some(token)): makeUser(token);
+			case Success(None): None;
+			case Failure(e): e;
+		}
+	}
+}
+
+typedef CognitoProviderConfig<User> = {
+	var region(default, null):String;
+	var poolId(default, null):String;
+	var clientId(default, null):String;
+	var makeUser(default, null):CognitoProfile->Promise<Option<User>>;
+	@:optional var extractToken(default, null):IncomingRequestHeader->Outcome<Option<String>, Error>;
+}
+class CognitoProvider<User> extends TokenProvider<User> {
+	public function new(config:CognitoProviderConfig<User>) {
 		super(token -> new CognitoAuth({
 			makeUser: config.makeUser,
 			region: config.region,
 			poolId: config.poolId,
 			clientId: config.clientId,
-			idToken: token,
-		}).authenticate());
+			token: token,
+		}).authenticate(), config.extractToken);
 	}
 }
 
-class FirebaseProvider<User> extends BearerProvider<User> {
-	public function new(config) {
+typedef FirebaseProviderConfig<User> = {
+	var projectId(default, null):String;
+	var makeUser(default, null):FirebaseProfile->Promise<Option<User>>;
+	@:optional var extractToken(default, null):IncomingRequestHeader->Outcome<Option<String>, Error>;
+}
+class FirebaseProvider<User> extends TokenProvider<User> {
+	public function new(config:FirebaseProviderConfig<User>) {
 		super(token -> new FirebaseAuth({
 			makeUser: config.makeUser,
 			projectId: config.projectId,
-			idToken: token,
-		}).authenticate());
+			token: token,
+		}).authenticate(), config.extractToken);
+	}
+}
+
+typedef Auth0ProviderConfig<User> = {
+	var domain(default, null):String;
+	var clientId(default, null):String;
+	var makeUser(default, null):FirebaseProfile->Promise<Option<User>>;
+	@:optional var extractToken(default, null):IncomingRequestHeader->Outcome<Option<String>, Error>;
+}
+class Auth0Provider<User> extends TokenProvider<User> {
+	public function new(config:Auth0ProviderConfig<User>) {
+		super(token -> new Auth0Auth({
+			makeUser: config.makeUser,
+			domain: config.domain,
+			clientId: config.clientId,
+			token: token,
+		}).authenticate(), config.extractToken);
 	}
 }
 
