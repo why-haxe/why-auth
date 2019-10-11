@@ -4,11 +4,11 @@ package why.auth;
 	#error 'The class AmplifyDelegate requires the aws-amplify library'
 #end
 
-import why.Delegate;
 import aws.amplify.Amplify;
 import aws.amplify.Auth;
 import aws.amplify.Hub;
 import tink.state.*;
+import why.Delegate;
 
 using tink.CoreApi;
 
@@ -21,7 +21,7 @@ typedef SignInInfo = {
  * Setup:
  * Call `AmplifyDelegate.configure` before accessing `AmplifyDelegate.instance`
  */
-class AmplifyDelegate implements Delegate<SignUpInfo, SignInInfo, UserAttributes, UserAttributes> {
+class AmplifyDelegate extends DelegateBase<SignUpInfo, SignInInfo, UserAttributes, UserAttributes> {
 	
 	public static var instance(default, null):AmplifyDelegate = new AmplifyDelegate();
 	
@@ -29,8 +29,6 @@ class AmplifyDelegate implements Delegate<SignUpInfo, SignInInfo, UserAttributes
 	public static var inst(get, never):AmplifyDelegate;
 	static inline function get_inst() return instance;
 	
-	
-	public var status(default, null):Observable<Status<User<UserAttributes, UserAttributes>>>;
 	
 	public static function configure(config:{region:String, userPoolId:String, appClientId:String, ?identityPoolId:String}) {
 		Amplify.configure({
@@ -46,7 +44,7 @@ class AmplifyDelegate implements Delegate<SignUpInfo, SignInInfo, UserAttributes
 	
 	function new() {
 		var state = new State<Status<User<UserAttributes, UserAttributes>>>(Initializing);
-		status = state.observe();
+		super(state);
 		
 		function update(init = false)
 			Promise.ofJsPromise(Auth.currentUserPoolUser())
@@ -59,26 +57,27 @@ class AmplifyDelegate implements Delegate<SignUpInfo, SignInInfo, UserAttributes
 								case Success(attrs): SignedIn(new AmplifyUser(user, [for(entry in attrs) entry.Name => entry.Value]));
 								case Failure(e): Errored(e);
 							}));
+					case Failure(e) if(e.data == 'No current user'):
+						state.set(SignedOut);
 					case Failure(e):
 						state.set(Errored(e));
 				});
 			
-		Hub.listen('auth', {
-			onHubCapsule:
-				function(capsule) {
-					switch capsule.payload.event {
-						case 'signIn' | 'configured': update();
-						case 'signOut': state.set(SignedOut);
-					}
+		Hub.listen('auth', 
+			function(capsule) {
+				switch capsule.payload.event {
+					case v = 'signIn' | 'configured': trace(v); update();
+					case 'signOut': state.set(SignedOut);
 				}
-		});
+			}
+		);
 	}
 	
-	public function signUp(info:SignUpInfo):Promise<Noise> {
+	override function signUp(info:SignUpInfo):Promise<Noise> {
 		return Promise.ofJsPromise(Auth.signUp(info)).noise();
 	}
 	
-	public function signIn(credentials:SignInInfo):Promise<Noise> {
+	override function signIn(credentials:SignInInfo):Promise<Noise> {
 		return Promise.ofJsPromise(Auth.signIn(credentials.username, credentials.password))
 			.next(user -> {
 				if((cast user).challengeName == 'NEW_PASSWORD_REQUIRED')
@@ -88,19 +87,19 @@ class AmplifyDelegate implements Delegate<SignUpInfo, SignInInfo, UserAttributes
 			});
 	}
 	
-	public function signOut():Promise<Noise> {
+	override function signOut():Promise<Noise> {
 		return Promise.ofJsPromise(Auth.signOut());
 	}
 	
-	public function forgetPassword(id:String):Promise<Noise> {
+	override function forgetPassword(id:String):Promise<Noise> {
 		return Promise.ofJsPromise(Auth.forgotPassword(id)).noise();
 	}
 	
-	public function resetPassword(id:String, code:String, password:String):Promise<Noise> {
+	override function resetPassword(id:String, code:String, password:String):Promise<Noise> {
 		return Promise.ofJsPromise(Auth.forgotPasswordSubmit(id, code, password)).noise();
 	}
 	
-	public function confirmSignUp(id:String, code:String):Promise<Noise> {
+	override function confirmSignUp(id:String, code:String):Promise<Noise> {
 		return Promise.ofJsPromise(Auth.confirmSignUp(id, code)).noise();
 	}
 	

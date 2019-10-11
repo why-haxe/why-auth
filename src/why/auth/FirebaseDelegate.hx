@@ -6,48 +6,46 @@ import why.Delegate;
 
 using tink.CoreApi;
 
-class FirebaseDelegate implements Delegate<Credentials, Credentials, FirebaseProfile, FirebaseProfilePatch> {
-	public var status(default, null):Observable<Status<User<FirebaseProfile, FirebaseProfilePatch>>>;
-	
+class FirebaseDelegate extends DelegateBase<Credentials, Credentials, FirebaseProfile, FirebaseProfilePatch> {
 	var auth:Auth;
 	
 	public function new(auth) {
-		this.auth = auth;
 		var state = new State<Status<User<FirebaseProfile, FirebaseProfilePatch>>>(Initializing);
+		super(state);
+		this.auth = auth;
 		auth.onAuthStateChanged(
 			function(user) state.set(user == null ? SignedOut : SignedIn(new FirebaseUser(user))),
 			function(e) state.set(Errored(Error.ofJsError(e)))
 		);
-		status = state.observe();
 	}
 	
-	public function signUp(credentials:Credentials):Promise<Noise> {
+	override function signUp(credentials:Credentials):Promise<Noise> {
 		return switch credentials {
 			case Email(email, password):
 				Promise.ofJsPromise(auth.createUserWithEmailAndPassword(email, password))
 					.next(cred -> cred.user.sendEmailVerification());
 		}
 	}
-	public function signIn(credentials:Credentials):Promise<Noise> {
+	override function signIn(credentials:Credentials):Promise<Noise> {
 		return switch credentials {
 			case Email(email, password):
 				Promise.ofJsPromise(auth.signInWithEmailAndPassword(email, password));
 		}
 	}
 	
-	public function signOut():Promise<Noise> {
+	override function signOut():Promise<Noise> {
 		return Promise.ofJsPromise(auth.signOut());	
 	}
 	
-	public function forgetPassword(id:String):Promise<Noise> {
+	override function forgetPassword(id:String):Promise<Noise> {
 		return Promise.ofJsPromise(auth.sendPasswordResetEmail(id));
 	}
 	
-	public function resetPassword(id:String, code:String, password:String):Promise<Noise> {
+	override function resetPassword(id:String, code:String, password:String):Promise<Noise> {
 		return Promise.ofJsPromise(auth.confirmPasswordReset(code, password));
 	}
 	
-	public function confirmSignUp(id:String, code:String):Promise<Noise> {
+	override function confirmSignUp(id:String, code:String):Promise<Noise> {
 		// the verification link will do the job
 		return new Error('Firebase does not support this API');
 	}
