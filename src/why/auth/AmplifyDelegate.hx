@@ -66,7 +66,7 @@ class AmplifyDelegate extends DelegateBase<SignUpInfo, SignInInfo, UserAttribute
 		Hub.listen('auth', 
 			function(capsule) {
 				switch capsule.payload.event {
-					case v = 'signIn' | 'configured': trace(v); update();
+					case v = 'signIn' | 'configured': update();
 					case 'signOut': state.set(SignedOut);
 				}
 			}
