@@ -2,5 +2,8 @@
 -main RunTests
 -dce full
 
+-lib tink_unittest
 -lib aws-amplify
 -lib hxjs-firebase
+
+-D no-deprecation-warnings

@@ -32,15 +32,9 @@ class DelegateBase<SignUpInfo, Credentials, Profile, ProfilePatch> implements De
 	
 	function new(status) {
 		this.status = status;
-		this.profile = Observable.create(() -> {
-			var s = status.measure();
-			switch s.value {
-				case SignedIn(user):
-					var p = user.profile.measure();
-					new Measurement(Some(p.value), s.becameInvalid.first(p.becameInvalid));
-				case _:
-					new Measurement(None, s.becameInvalid);
-			}
+		this.profile = Observable.auto(() -> switch status.value {
+			case SignedIn(user): Some(user.profile.value);
+			case _: None;
 		});
 	}
 	
