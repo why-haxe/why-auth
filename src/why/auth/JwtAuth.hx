@@ -21,8 +21,9 @@ class JwtAuth<Profile:Claims, User> implements why.Auth<User> {
 	
 	public static function verifyToken(input:VerifyInput):Promise<Claims> {
 		return input.keys.next(keys -> switch Codec.decode(input.token) {
-			case Success({a: keys[_.kid] => null}):
-				new Error('[JwtAuth] key not found');
+			case Success(pair = {a: keys[_.kid] => null}):
+				var list = [for(key in keys.keys()) '"$key"'].join(', ');
+				new Error('[JwtAuth] key "${pair.a.kid}" not found (available keys: $list)');
 			case Success({a: keys[_.kid] => key}):
 				var verifier = new BasicVerifier(RS256({publicKey: key}), new DefaultCrypto(), input.options);
 				verifier.verify(input.token);
