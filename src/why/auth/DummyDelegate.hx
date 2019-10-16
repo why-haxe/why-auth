@@ -40,10 +40,6 @@ class DummyDelegate<SignUpInfo, Credentials, Profile, ProfilePatch> extends Dele
 		return Promise.NOISE;
 	}
 	
-	override function getToken():Promise<Option<String>> {
-		return credentials == null ? None : _getToken(credentials).next(Some);
-	}
-	
 	override function forgetPassword(id:String):Promise<Noise> {
 		return new Error(NotImplemented, 'DummyDelegate#forgetPassword is not implemented');
 	}
@@ -52,7 +48,7 @@ class DummyDelegate<SignUpInfo, Credentials, Profile, ProfilePatch> extends Dele
 		return new Error(NotImplemented, 'DummyDelegate#resetPassword is not implemented');
 	}
 	
-	public function confirmSignUp(id:String, code:String):Promise<Noise> {
+	override function confirmSignUp(id:String, code:String):Promise<Noise> {
 		return new Error(NotImplemented, 'DummyDelegate#confirmSignUp is not implemented');
 	}
 }
