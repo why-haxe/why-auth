@@ -153,7 +153,7 @@ class FirebaseProvider<User> extends TokenProvider<User> {
 typedef Auth0ProviderConfig<User> = {
 	var domain(default, null):String;
 	var clientId(default, null):String;
-	var makeUser(default, null):FirebaseProfile->Promise<Option<User>>;
+	var makeUser(default, null):Auth0Profile->Promise<Option<User>>;
 	@:optional var extractToken(default, null):IncomingRequestHeader->Outcome<Option<String>, Error>;
 }
 class Auth0Provider<User> extends TokenProvider<User> {

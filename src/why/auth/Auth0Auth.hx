@@ -34,6 +34,13 @@ class Auth0Auth<User> extends JwkAuth<Auth0Profile, User>{
 
 typedef Auth0Profile = {
 	> Claims,
+	nickname:String,
+	name:String,
+	picture:String,
+	updated_at:String,
+	email:String,
+	email_verified:Bool,
+	nonce:String,
 }
 
 typedef Auth0Config<User> = {
