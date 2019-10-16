@@ -14,10 +14,11 @@ class Auth0Delegate extends DelegateBase<Credentials, Credentials, Auth0Profile,
 	public function new(opt) {
 		super(state = new State<Status<User<Auth0Profile, Auth0ProfilePatch>>>(Initializing));
 		
+		if(opt.getRedirectUri != null) this.getRedirectUri = opt.getRedirectUri;
+		
 		auth = new WebAuth({
 			domain: opt.domain,
 			clientID: opt.clientId,
-			redirectUri: window.location.href,
 			responseType: 'id_token',
 			scope: 'openid email profile'
 		});
@@ -33,9 +34,12 @@ class Auth0Delegate extends DelegateBase<Credentials, Credentials, Auth0Profile,
 		}
 	}
 	
+	dynamic function getRedirectUri():String {
+		return window.location.href;
+	}
+	
 	function update() {
-		auth.checkSession({}, function(err, data) {
-			console.log(data);
+		auth.checkSession({redirectUri: getRedirectUri()}, function(err, data) {
 			if(err != null) {
 				state.set(err.code == 'login_required' ? SignedOut : Errored(error(err)));
 			} else {
@@ -68,6 +72,7 @@ class Auth0Delegate extends DelegateBase<Credentials, Credentials, Auth0Profile,
 				realm: 'Username-Password-Authentication',
 				email: credentials.email,
 				password: credentials.password,
+				redirectUri: getRedirectUri(),
 			}, function(err) if(err != null) reject(error(err)));
 		});
 	}
