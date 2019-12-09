@@ -120,7 +120,7 @@ class AmplifyUser implements User<UserAttributes, UserAttributes> {
 	}
 	
 	public function updateProfile(patch:UserAttributes):Promise<Noise> {
-		return Promise.ofJsPromise(user.updateAttributes([for(key in patch.keys()) {Name: key, Value: patch[key]}])).noise();
+		return Promise.ofJsPromise(user.updateAttributes([for(key in patch.keys()) {Name: key, Value: patch.get(key)}])).noise();
 	}
 	
 	public function changePassword(oldPassword:String, newPassword:String):Promise<Noise> {
