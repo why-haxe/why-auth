@@ -2,6 +2,7 @@ package why.auth;
 
 using tink.CoreApi;
 
+@:using(why.auth.Status.StatusTools)
 enum Status<Profile> {
 	Initializing;
 	SignedOut;
