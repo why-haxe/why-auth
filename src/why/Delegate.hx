@@ -5,13 +5,20 @@ import tink.state.*;
 
 using tink.CoreApi;
 
-interface Delegate<SignUpInfo, Credentials, Profile, ProfilePatch> {
+@:forward
+abstract Delegate<S, C, P, T>(DelegateObject<S, C, P, T>) from DelegateObject<S, C, P, T> {
+	@:from
+	public static inline function ofPromise<S, C, P, T>(promise:Promise<Delegate<S, C, P, T>>):Delegate<S, C, P, T> {
+		return new PromiseDelegate(promise);
+	}
+}
+interface DelegateObject<SignUpInfo, Credentials, Profile, ProfilePatch> {
 	var status(default, null):Observable<Status<User<Profile, ProfilePatch>>>;
 	var profile(default, null):Observable<Option<Profile>>;
 	function signUp(info:SignUpInfo):Promise<Noise>;
 	function signIn(credentials:Credentials):Promise<Noise>;
 	function signOut():Promise<Noise>;
-	
+
 	function forgetPassword(id:String):Promise<Noise>;
 	function resetPassword(id:String, code:String, password:String):Promise<Noise>;
 	function confirmSignUp(id:String, code:String):Promise<Noise>;
@@ -24,12 +31,48 @@ interface User<Profile, ProfilePatch> {
 	function changePassword(oldPassword:String, newPassword:String):Promise<Noise>;
 }
 
-// TODO: abstract class
-class DelegateBase<SignUpInfo, Credentials, Profile, ProfilePatch> implements Delegate<SignUpInfo, Credentials, Profile, ProfilePatch> {
+class PromiseDelegate<SignUpInfo, Credentials, Profile, ProfilePatch> extends DelegateBase<SignUpInfo, Credentials, Profile, ProfilePatch> {
+	var promise:Promise<Delegate<SignUpInfo, Credentials, Profile, ProfilePatch>>;
+	public function new(promise) {
+		super(
+			Observable
+				.ofPromise(this.promise = promise)
+				.map(function(promised) return switch promised {
+					case Loading:
+						Observable.const(Initializing);
+					case Done(delegate):
+						delegate.status;
+					case Failed(e):
+						Observable.const(Errored(e));
+				})
+				.flatten()
+		);
+	}
 	
+	override function signUp(info:SignUpInfo):Promise<Noise>
+		return promise.next(delegate -> delegate.signUp(info));
+
+	override function signIn(credentials:Credentials):Promise<Noise>
+		return promise.next(delegate -> delegate.signIn(credentials));
+
+	override function signOut():Promise<Noise>
+		return promise.next(delegate -> delegate.signOut());
+
+	override function forgetPassword(id:String):Promise<Noise>
+		return promise.next(delegate -> delegate.forgetPassword(id));
+
+	override function resetPassword(id:String, code:String, password:String):Promise<Noise>
+		return promise.next(delegate -> delegate.resetPassword(id, code, password));
+
+	override function confirmSignUp(id:String, code:String):Promise<Noise>
+		return promise.next(delegate -> delegate.confirmSignUp(id, code));
+}
+
+// TODO: abstract class
+class DelegateBase<SignUpInfo, Credentials, Profile, ProfilePatch> implements DelegateObject<SignUpInfo, Credentials, Profile, ProfilePatch> {
 	public var status(default, null):Observable<Status<User<Profile, ProfilePatch>>>;
 	public var profile(default, null):Observable<Option<Profile>>;
-	
+
 	function new(status) {
 		this.status = status;
 		this.profile = Observable.auto(() -> switch status.value {
@@ -37,11 +80,23 @@ class DelegateBase<SignUpInfo, Credentials, Profile, ProfilePatch> implements De
 			case _: None;
 		});
 	}
-	
-	public function signUp(info:SignUpInfo):Promise<Noise> throw 'abstract';
-	public function signIn(credentials:Credentials):Promise<Noise> throw 'abstract';
-	public function signOut():Promise<Noise> throw 'abstract';
-	public function forgetPassword(id:String):Promise<Noise> throw 'abstract';
-	public function resetPassword(id:String, code:String, password:String):Promise<Noise> throw 'abstract';
-	public function confirmSignUp(id:String, code:String):Promise<Noise> throw 'abstract';
+
+	public function signUp(info:SignUpInfo):Promise<Noise>
+		throw 'abstract';
+
+	public function signIn(credentials:Credentials):Promise<Noise>
+		throw 'abstract';
+
+	public function signOut():Promise<Noise>
+		throw 'abstract';
+
+	public function forgetPassword(id:String):Promise<Noise>
+		throw 'abstract';
+
+	public function resetPassword(id:String, code:String, password:String):Promise<Noise>
+		throw 'abstract';
+
+	public function confirmSignUp(id:String, code:String):Promise<Noise>
+		throw 'abstract';
+
 }
