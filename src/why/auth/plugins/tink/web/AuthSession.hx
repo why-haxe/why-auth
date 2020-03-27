@@ -5,7 +5,6 @@ package why.auth.plugins.tink.web;
 #end
 
 import tink.http.Request;
-import tink.Anon.merge;
 import why.auth.CognitoAuth;
 import why.auth.FirebaseAuth;
 import why.auth.Auth0Auth;
