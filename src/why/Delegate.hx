@@ -13,8 +13,8 @@ abstract Delegate<S, C, P, T>(DelegateObject<S, C, P, T>) from DelegateObject<S,
 	}
 }
 interface DelegateObject<SignUpInfo, Credentials, Profile, ProfilePatch> {
-	var status(default, null):Observable<Status<User<Profile, ProfilePatch>>>;
-	var profile(default, null):Observable<Option<Profile>>;
+	final status:Observable<Status<User<Profile, ProfilePatch>>>;
+	final profile:Observable<Option<Profile>>;
 	function signUp(info:SignUpInfo):Promise<Noise>;
 	function signIn(credentials:Credentials):Promise<Noise>;
 	function signOut():Promise<Noise>;
@@ -25,14 +25,14 @@ interface DelegateObject<SignUpInfo, Credentials, Profile, ProfilePatch> {
 }
 
 interface User<Profile, ProfilePatch> {
-	var profile(default, null):Observable<Profile>;
+	final profile:Observable<Profile>;
 	function getToken():Promise<String>;
 	function updateProfile(patch:ProfilePatch):Promise<Noise>;
 	function changePassword(oldPassword:String, newPassword:String):Promise<Noise>;
 }
 
 class PromiseDelegate<SignUpInfo, Credentials, Profile, ProfilePatch> extends DelegateBase<SignUpInfo, Credentials, Profile, ProfilePatch> {
-	var promise:Promise<Delegate<SignUpInfo, Credentials, Profile, ProfilePatch>>;
+	final promise:Promise<Delegate<SignUpInfo, Credentials, Profile, ProfilePatch>>;
 	public function new(promise) {
 		super(
 			Observable
@@ -70,8 +70,8 @@ class PromiseDelegate<SignUpInfo, Credentials, Profile, ProfilePatch> extends De
 
 // TODO: abstract class
 class DelegateBase<SignUpInfo, Credentials, Profile, ProfilePatch> implements DelegateObject<SignUpInfo, Credentials, Profile, ProfilePatch> {
-	public var status(default, null):Observable<Status<User<Profile, ProfilePatch>>>;
-	public var profile(default, null):Observable<Option<Profile>>;
+	public final status:Observable<Status<User<Profile, ProfilePatch>>>;
+	public final profile:Observable<Option<Profile>>;
 
 	function new(status) {
 		this.status = status;

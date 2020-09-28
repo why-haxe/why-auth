@@ -23,7 +23,7 @@ typedef SignInInfo = {
  */
 class AmplifyDelegate extends DelegateBase<SignUpInfo, SignInInfo, UserAttributes, UserAttributes> {
 	
-	public static var instance(default, null):AmplifyDelegate = new AmplifyDelegate();
+	public static final instance:AmplifyDelegate = new AmplifyDelegate();
 	
 	// shorthand
 	public static var inst(get, never):AmplifyDelegate;
@@ -106,8 +106,8 @@ class AmplifyDelegate extends DelegateBase<SignUpInfo, SignInInfo, UserAttribute
 }
 
 class AmplifyUser implements User<UserAttributes, UserAttributes> {
-	public var profile(default, null):Observable<UserAttributes>;
-	var user:CognitoUser;
+	public final profile:Observable<UserAttributes>;
+	final user:CognitoUser;
 	
 	public function new(user, attrs) {
 		this.user = user;
@@ -128,7 +128,7 @@ class AmplifyUser implements User<UserAttributes, UserAttributes> {
 	}
 }
 
-@:forward(keys)
+@:forward(keys, keyValueIterator, iterator)
 abstract UserAttributes(Map<String, String>) from Map<String, String> to Map<String, String> {
 	@:resolve @:arrayAccess
 	public inline function get(key:String):String return this.get(key);
