@@ -32,8 +32,8 @@ class ProfileTest {
 }
 
 private class TestUser implements User<Int, Noise> {
-	public var profile(default, null):Observable<Int>;
-	public var state(default, null):State<Int>;
+	public final profile:Observable<Int>;
+	public final state:State<Int>;
 	
 	public function new() {
 		profile = state = new State(0);

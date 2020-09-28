@@ -57,9 +57,9 @@ enum Credentials {
 }
 
 class FirebaseUser implements User<FirebaseProfile, FirebaseProfilePatch> {
-	public var profile(default, null):Observable<FirebaseProfile>;
+	public final profile:Observable<FirebaseProfile>;
 	
-	var user:firebase.User;
+	final user:firebase.User;
 	
 	public function new(user) {
 		this.user = user;
