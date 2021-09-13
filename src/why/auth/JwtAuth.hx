@@ -9,7 +9,7 @@ using tink.CoreApi;
 
 class JwtAuth<Profile:Claims, User> implements why.Auth<User> {
 	
-	var config:JwtConfig<Profile, User>;
+	final config:JwtConfig<Profile, User>;
 	
 	public function new(config) {
 		this.config = config;
@@ -22,10 +22,10 @@ class JwtAuth<Profile:Claims, User> implements why.Auth<User> {
 	public static function verifyToken(input:VerifyInput):Promise<Claims> {
 		return input.keys.next(keys -> switch Codec.decode(input.token) {
 			case Success(pair = {a: keys[_.kid] => null}):
-				var list = [for(key in keys.keys()) '"$key"'].join(', ');
+				final list = [for(key in keys.keys()) '"$key"'].join(', ');
 				new Error('[JwtAuth] key "${pair.a.kid}" not found (available keys: $list)');
 			case Success({a: keys[_.kid] => key}):
-				var verifier = new BasicVerifier(RS256({publicKey: key}), new DefaultCrypto(), input.options);
+				final verifier = new BasicVerifier(RS256({publicKey: key}), new DefaultCrypto(), input.options);
 				verifier.verify(input.token);
 			case Failure(e):
 				e;
@@ -35,11 +35,11 @@ class JwtAuth<Profile:Claims, User> implements why.Auth<User> {
 
 typedef JwtConfig<Profile:Claims, User> = {
 	> VerifyInput,
-	var makeUser(default, null):Profile->Promise<Option<User>>;
+	final makeUser:Profile->Promise<Option<User>>;
 }
 
 private typedef VerifyInput = {
-	var keys(default, null):Promise<DynamicAccess<String>>;
-	var token(default, null):String;
-	@:optional var options(default, null):VerifyOptions;
+	final keys:Promise<DynamicAccess<String>>;
+	final token:String;
+	final ?options:VerifyOptions;
 }

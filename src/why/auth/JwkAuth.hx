@@ -9,7 +9,7 @@ using tink.CoreApi;
 
 class JwkAuth<Profile:Claims, User> extends JwtAuth<Profile, User> {
 	
-	static var jwks:Map<String, Void->Promise<DynamicAccess<String>>> = new Map();
+	static final jwks:Map<String, Void->Promise<DynamicAccess<String>>> = new Map();
 	
 	public function new(config:JwkConfig<Profile, User>) {
 		super({
@@ -26,7 +26,7 @@ class JwkAuth<Profile:Claims, User> extends JwtAuth<Profile, User> {
 				tink.http.Fetch.fetch(url).all()
 					.next(res -> tink.Json.parse((res.body:{keys:Array<{kid:String, n:String, e:String, kty:String, use:String}>})))
 					.next(o -> {
-						var keys = new DynamicAccess<String>();
+						final keys = new DynamicAccess<String>();
 						for(e in o.keys) keys[e.kid] = js.Lib.require('jwk-to-pem')(e); // TODO: haxe implementation of jwk-to-pem
 						keys;
 					})
@@ -47,11 +47,11 @@ class JwkAuth<Profile:Claims, User> extends JwtAuth<Profile, User> {
 
 typedef JwkConfig<Profile:Claims, User> = {
 	> VerifyInput,
-	var makeUser(default, null):Profile->Promise<Option<User>>;
+	final makeUser:Profile->Promise<Option<User>>;
 }
 
 private typedef VerifyInput = {
-	var jwkUrl(default, null):String;
-	var token(default, null):String;
-	@:optional var options(default, null):VerifyOptions;
+	final jwkUrl:String;
+	final token:String;
+	final ?options:VerifyOptions;
 }
