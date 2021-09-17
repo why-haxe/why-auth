@@ -54,7 +54,7 @@ class DummyDelegate<SignUpInfo, Credentials, Profile, ProfilePatch> extends Dele
 }
 
 class DummyUser<Profile, ProfilePatch> implements User<Profile, ProfilePatch> {
-	public var profile(default, null):Observable<Profile>;
+	public final profile:Observable<Profile>;
 	var _getToken:Void->Promise<String>;
 	
 	public function new(getToken, initProfile) {

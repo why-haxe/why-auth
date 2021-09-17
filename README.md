@@ -14,7 +14,7 @@ interface Auth<User> {
 `Delegate` is a client side interface that allows user to login/logout and generates authentication tokens
 ```haxe
 interface Delegate<SignUpInfo, Credentials, Profile, ProfilePatch> {
-	var status(default, null):Observable<Status<User<Profile, ProfilePatch>>>;
+	final status:Observable<Status<User<Profile, ProfilePatch>>>;
 	function signUp(info:SignUpInfo):Promise<Noise>;
 	function signIn(credentials:Credentials):Promise<Noise>;
 	function signOut():Promise<Noise>;
@@ -25,7 +25,7 @@ interface Delegate<SignUpInfo, Credentials, Profile, ProfilePatch> {
 }
 
 interface User<Profile, ProfilePatch> {
-	var profile(default, null):Observable<Profile>;
+	final profile:Observable<Profile>;
 	function getToken():Promise<String>;
 	function updateProfile(patch:ProfilePatch):Promise<Noise>;
 	function changePassword(oldPassword:String, newPassword:String):Promise<Noise>;
