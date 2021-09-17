@@ -1,0 +1,23 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        haxe-version:
+          - stable
+          - nightly
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v2
+      - name: Install Lix
+        uses: lix-pm/setup-lix@master
+      - name: Install Haxe
+        run: lix install haxe ${{ matrix.haxe-version }}
+      - name: Install Haxe Libraries
+        run: lix download
+      # Just compile it for now
+      - run: haxe -js bin/node/tests.js -lib hxnodejs -lib travix -lib why-auth tests.hxml
