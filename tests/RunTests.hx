@@ -1,6 +1,7 @@
 package ;
 
 import why.Auth;
+import why.auth.DummyDelegate;
 import tink.unit.*;
 import tink.testrunner.*;
 // import why.auth.TinkWebAuth;

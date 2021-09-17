@@ -110,7 +110,7 @@ private typedef Credentials = {
 }
 
 class Auth0User implements User<Auth0Profile, Auth0ProfilePatch> {
-	public var profile(default, null):Observable<Auth0Profile>;
+	public final profile:Observable<Auth0Profile>;
 	
 	var token:String;
 	
