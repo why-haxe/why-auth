@@ -6,6 +6,7 @@ package why.auth.plugins.tink.web;
 
 import tink.http.Request;
 import why.auth.CognitoAuth;
+import why.auth.KeycloakAuth;
 import why.auth.FirebaseAuth;
 import why.auth.Auth0Auth;
 
@@ -25,7 +26,8 @@ class AuthSession<User> {
 		return Promise.iterate(
 			[for(provider in providers) Promise.lazy(provider.authenticate.bind(header))],
 			function(result) return result.map(Some),
-			None
+			None,
+			true // fall through on error
 		);
 	}
 }
@@ -116,12 +118,8 @@ class TokenProvider<User> implements ProviderObject<User> {
 	}
 }
 
-typedef CognitoProviderConfig<User> = {
-	var region(default, null):String;
-	var poolId(default, null):String;
-	var clientId(default, null):String;
-	var makeUser(default, null):CognitoProfile->Promise<Option<User>>;
-	@:optional var extractToken(default, null):IncomingRequestHeader->Outcome<Option<String>, Error>;
+typedef CognitoProviderConfig<User> = CognitoConfig<User> & {
+	final ?extractToken:IncomingRequestHeader->Outcome<Option<String>, Error>;
 }
 class CognitoProvider<User> extends TokenProvider<User> {
 	public function new(config:CognitoProviderConfig<User>) {
@@ -135,10 +133,24 @@ class CognitoProvider<User> extends TokenProvider<User> {
 	}
 }
 
-typedef FirebaseProviderConfig<User> = {
-	var projectId(default, null):String;
-	var makeUser(default, null):FirebaseProfile->Promise<Option<User>>;
-	@:optional var extractToken(default, null):IncomingRequestHeader->Outcome<Option<String>, Error>;
+typedef KeycloakProviderConfig<User> = KeycloakConfig<User> & {
+	final ?extractToken:IncomingRequestHeader->Outcome<Option<String>, Error>;
+}
+class KeycloakProvider<User> extends TokenProvider<User> {
+	public function new(config:KeycloakProviderConfig<User>) {
+		super(token -> new KeycloakAuth({
+			makeUser: config.makeUser,
+			frontendUrl: config.frontendUrl,
+			backendUrl: config.backendUrl,
+			realm: config.realm,
+			clientId: config.clientId,
+			token: token,
+		}).authenticate(), config.extractToken);
+	}
+}
+
+typedef FirebaseProviderConfig<User> = FirebaseConfig<User> & {
+	final ?extractToken:IncomingRequestHeader->Outcome<Option<String>, Error>;
 }
 class FirebaseProvider<User> extends TokenProvider<User> {
 	public function new(config:FirebaseProviderConfig<User>) {

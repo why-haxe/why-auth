@@ -9,15 +9,19 @@ using tink.CoreApi;
 
 class KeycloakAuth<User> extends JwkAuth<KeycloakProfile, User>{
 	
-	public function new(config:KeycloakConfig<User>) {
-		final domain = '${config.frontendUrl.removeTrailingSlashes()}/realms/${config.realm}';
+	public function new(config:KeycloakConfig<User> & TokenInput) {
+		final backendUrl = switch config.backendUrl {
+			case null: config.frontendUrl;
+			case v: v;
+		}
 		super({
 			makeUser: config.makeUser,
-			jwkUrl: '$domain/protocol/openid-connect/certs',
+			jwkUrl: '${backendUrl.removeTrailingSlashes()}/realms/${config.realm}/protocol/openid-connect/certs',
 			token: config.token,
 			options: {
-				iss: domain,
-				aud: config.clientId,
+				iss: '${config.frontendUrl.removeTrailingSlashes()}/realms/${config.realm}',
+				// aud: config.clientId,
+				aud: 'account',
 			},
 		});
 	}
@@ -42,14 +46,17 @@ typedef KeycloakProfileObj = {
 	// final ?nonce:String;
 }
 
-typedef KeycloakConfig<User> = {
-	> VerifyInput,
+typedef KeycloakConfig<User> = VerifyInput & {
 	final makeUser:KeycloakProfile->Promise<Option<User>>;
 }
 
 private typedef VerifyInput = {
 	final frontendUrl:String;
+	final ?backendUrl:String;
 	final realm:String;
 	final clientId:String;
+}
+
+private typedef TokenInput = {
 	final token:String;
 }

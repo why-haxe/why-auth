@@ -8,7 +8,7 @@ using tink.CoreApi;
 
 class CognitoAuth<User> extends JwkAuth<CognitoProfile, User>{
 	
-	public function new(config:CognitoConfig<User>) {
+	public function new(config:CognitoConfig<User> & TokenInput) {
 		var domain = 'https://cognito-idp.${config.region}.amazonaws.com/${config.poolId}';
 		super({
 			makeUser: config.makeUser,
@@ -21,7 +21,7 @@ class CognitoAuth<User> extends JwkAuth<CognitoProfile, User>{
 		});
 	}
 	
-	public static inline function verifyToken<User>(input:VerifyInput):Promise<Claims> {
+	public static inline function verifyToken<User>(input:VerifyInput & TokenInput):Promise<Claims> {
 		var domain = 'https://cognito-idp.${input.region}.amazonaws.com/${input.poolId}';
 		return JwkAuth.verifyToken({
 			jwkUrl: '$domain/.well-known/jwks.json',
@@ -46,14 +46,15 @@ typedef CognitoProfileObj = {
 	?phone_number:String,
 }
 
-typedef CognitoConfig<User> = {
-	> VerifyInput,
-	var makeUser(default, null):CognitoProfile->Promise<Option<User>>;
+typedef CognitoConfig<User> = VerifyInput & {
+	final makeUser:CognitoProfile->Promise<Option<User>>;
 }
 
 private typedef VerifyInput = {
-	var region(default, null):String;
-	var poolId(default, null):String;
-	var clientId(default, null):String;
-	var token(default, null):String;
+	final region:String;
+	final poolId:String;
+	final clientId:String;
+}
+private typedef TokenInput = {
+	final token:String;
 }

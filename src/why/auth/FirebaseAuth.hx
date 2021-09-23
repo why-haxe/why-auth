@@ -16,7 +16,7 @@ class FirebaseAuth<User> extends JwtAuth<FirebaseProfile, User> {
 				.next(keys -> new Pair(keys, (cast Future.NEVER:Future<Noise>)));
 		});
 	
-	public function new(config:FirebaseConfig<User>) {
+	public function new(config:FirebaseConfig<User> & TokenInput) {
 		super({
 			makeUser: config.makeUser,
 			keys: keys(),
@@ -28,7 +28,7 @@ class FirebaseAuth<User> extends JwtAuth<FirebaseProfile, User> {
 		});
 	}
 	
-	public static function verifyToken(input:VerifyInput):Promise<Claims> {
+	public static function verifyToken(input:VerifyInput & TokenInput):Promise<Claims> {
 		return JwtAuth.verifyToken({
 			keys: keys(),
 			token: input.token,
@@ -45,12 +45,14 @@ typedef FirebaseProfile = {
 	> Claims,
 }
 
-typedef FirebaseConfig<User> = {
-	> VerifyInput,
-	var makeUser(default, null):FirebaseProfile->Promise<Option<User>>;
+typedef FirebaseConfig<User> = VerifyInput & {
+	final makeUser:FirebaseProfile->Promise<Option<User>>;
 }
 
 private typedef VerifyInput = {
-	var projectId(default, null):String;
-	var token(default, null):String;
+	final projectId:String;
+}
+
+private typedef TokenInput = {
+	final token:String;
 }
