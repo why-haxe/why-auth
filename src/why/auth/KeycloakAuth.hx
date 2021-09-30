@@ -25,6 +25,23 @@ class KeycloakAuth<User> extends JwkAuth<KeycloakProfile, User>{
 			},
 		});
 	}
+	
+	
+	public static inline function verifyToken<User>(input:VerifyInput & TokenInput):Promise<Claims> {
+		final backendUrl = switch input.backendUrl {
+			case null: input.frontendUrl;
+			case v: v;
+		}
+		return JwkAuth.verifyToken({
+			jwkUrl: '${backendUrl.removeTrailingSlashes()}/realms/${input.realm}/protocol/openid-connect/certs',
+			token: input.token,
+			options: {
+				iss: '${input.frontendUrl.removeTrailingSlashes()}/realms/${input.realm}',
+				// aud: config.clientId,
+				aud: 'account',
+			},
+		});
+	}
 }
 
 @:forward
